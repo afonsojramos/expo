@@ -29,6 +29,7 @@ import { useStandardState } from './useStandardState';
 export type {
   IntegrateWithRouterOptions,
   NavigatorContentProps,
+  StandardNavigatorDescriptor,
   StandardNavigatorEventMapBase,
   StandardUseNavigationBuilderOptions,
 } from './types';
