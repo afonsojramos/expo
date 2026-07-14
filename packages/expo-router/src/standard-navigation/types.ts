@@ -1,4 +1,8 @@
-import type { createStandardNavigator, NavigatorArgs } from 'standard-navigation';
+import type {
+  createStandardNavigator,
+  NavigatorArgs,
+  NavigatorDescriptor,
+} from 'standard-navigation';
 
 import type {
   DefaultNavigatorOptions,
@@ -7,6 +11,7 @@ import type {
   NavigationHelpers,
   NavigationState,
   ParamListBase,
+  RouteSource,
 } from '../react-navigation/native';
 import type { GoBackAction, NavigateAction } from '../react-navigation/routers/CommonActions';
 
@@ -72,12 +77,25 @@ export interface IntegrateWithRouterOptions<
   createProps?: (deps: StandardNavigatorCreatePropsFactoryDeps<State>) => Partial<NavigatorProps>;
 }
 
+/**
+ * A standard-navigation descriptor extended with Expo Router route information.
+ */
+export type StandardNavigatorDescriptor<NavigatorOptions extends object> =
+  NavigatorDescriptor<NavigatorOptions> & {
+    /**
+     * Indicates whether Expo Router received the route from a layout declaration or inferred it
+     * from the filesystem. Descriptors not created by Expo Router may leave this undefined.
+     */
+    routeSource?: RouteSource;
+  };
+
 export type StandardNavigatorContentProps<
   NavigatorOptions extends object,
   EventMap extends StandardNavigatorEventMapBase,
   NavigatorProps extends object,
-> = NavigatorArgs<NavigatorOptions, EventMap> &
-  Omit<NavigatorProps, keyof NavigatorArgs<NavigatorOptions, EventMap>>;
+> = Omit<NavigatorArgs<NavigatorOptions, EventMap>, 'descriptors'> & {
+  descriptors: Record<string, StandardNavigatorDescriptor<NavigatorOptions>>;
+} & Omit<NavigatorProps, keyof NavigatorArgs<NavigatorOptions, EventMap>>;
 
 /**
  * Lets TypeScript infer `EventMap` and `NavigatorProps` from a `NavigatorContent` component.

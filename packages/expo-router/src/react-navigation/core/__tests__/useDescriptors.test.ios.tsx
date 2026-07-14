@@ -487,6 +487,80 @@ test('renders layout defined for the navigator', () => {
 `);
 });
 
+test('exposes routeSource from the screen config on descriptors', () => {
+  const descriptorsMap: Record<string, any> = {};
+
+  const TestNavigator = (props: any) => {
+    const { state, descriptors, NavigationContent } = useNavigationBuilder<
+      NavigationState,
+      any,
+      Record<string, never>,
+      { title?: string },
+      any
+    >(MockRouter, props);
+
+    Object.assign(descriptorsMap, descriptors);
+
+    return (
+      <NavigationContent>{descriptors[state.routes[state.index]!.key]!.render()}</NavigationContent>
+    );
+  };
+
+  const TestScreen = (): any => 'Test screen';
+
+  render(
+    <BaseNavigationContainer>
+      <TestNavigator>
+        <Screen name="foo" component={TestScreen} routeSource="layout" />
+        <Screen name="bar" component={React.Fragment} routeSource="filesystem" />
+        <Screen name="baz" component={React.Fragment} />
+      </TestNavigator>
+    </BaseNavigationContainer>
+  );
+
+  const byName = Object.fromEntries(
+    Object.values(descriptorsMap).map((descriptor: any) => [descriptor.route.name, descriptor])
+  );
+
+  expect(byName.foo.routeSource).toBe('layout');
+  expect(byName.bar.routeSource).toBe('filesystem');
+  expect(byName.baz.routeSource).toBeUndefined();
+});
+
+test('exposes routeSource on placeholder descriptors created with describe', () => {
+  let describeFn: any;
+
+  const TestNavigator = (props: any) => {
+    const { state, descriptors, describe, NavigationContent } = useNavigationBuilder<
+      NavigationState,
+      any,
+      Record<string, never>,
+      { title?: string },
+      any
+    >(MockRouter, props);
+
+    describeFn = describe;
+
+    return (
+      <NavigationContent>{descriptors[state.routes[state.index]!.key]!.render()}</NavigationContent>
+    );
+  };
+
+  const TestScreen = (): any => 'Test screen';
+
+  render(
+    <BaseNavigationContainer>
+      <TestNavigator>
+        <Screen name="foo" component={TestScreen} routeSource="layout" />
+      </TestNavigator>
+    </BaseNavigationContainer>
+  );
+
+  const placeholder = describeFn({ key: 'foo-extra', name: 'foo', params: {} }, true);
+
+  expect(placeholder.routeSource).toBe('layout');
+});
+
 test("returns correct value for canGoBack when it's not overridden", () => {
   const TestNavigator = (props: any) => {
     const { state, descriptors, NavigationContent } = useNavigationBuilder<

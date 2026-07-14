@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { createStandardNavigator, type NavigatorArgs } from 'standard-navigation';
 
 import type { CommonNavigationAction, ParamListBase } from '../../react-navigation/core';
+import type { RouteSource } from '../../react-navigation/native';
 import {
   TabRouter,
   type TabNavigationState,
@@ -11,7 +12,11 @@ import {
 } from '../../react-navigation/routers';
 import type { GoBackAction, NavigateAction } from '../../react-navigation/routers/CommonActions';
 import { unstable_createStandardRouterNavigator } from '../index';
-import type { NavigatorContentProps, StandardNavigationAction } from '../types';
+import type {
+  NavigatorContentProps,
+  StandardNavigationAction,
+  StandardNavigatorDescriptor,
+} from '../types';
 
 // Type-equality helpers
 type Expect<T extends true> = T;
@@ -20,6 +25,15 @@ type Equal<A, B> =
 
 type Opts = { title?: string };
 type EventMap = { tabPress: { data: undefined; canPreventDefault: true } };
+
+export type _DescriptorRouteSource = Expect<
+  Equal<StandardNavigatorDescriptor<Opts>['routeSource'], RouteSource | undefined>
+>;
+
+type ContentDescriptor = NavigatorContentProps<Opts>['descriptors'][string];
+export type _ContentDescriptorRouteSource = Expect<
+  Equal<ContentDescriptor['routeSource'], RouteSource | undefined>
+>;
 
 function Content(_args: NavigatorArgs<Opts, EventMap>) {
   return null;

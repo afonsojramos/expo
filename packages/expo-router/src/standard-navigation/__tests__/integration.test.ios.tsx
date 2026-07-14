@@ -17,7 +17,7 @@ import {
 } from '../../react-navigation/routers';
 import { act, fireEvent, renderRouter, screen } from '../../testing-library';
 import { unstable_createStandardRouterNavigator, unstable_integrateWithRouter } from '../index';
-import type { NavigatorContentProps } from '../types';
+import type { NavigatorContentProps, StandardNavigatorContentProps } from '../types';
 
 type TestOptions = { title?: string };
 type TestEventMap = Record<string, { data: object | undefined; canPreventDefault: boolean }>;
@@ -52,8 +52,8 @@ const StandardTabsAll = unstable_createStandardRouterNavigator<
   TabRouterOptions
 >(NavigatorContent, TabRouter);
 
-const lastArgs = (): NavigatorArgs<TestOptions, TestEventMap> & Record<string, unknown> =>
-  contentSpy.mock.calls.at(-1)![0];
+const lastArgs = (): StandardNavigatorContentProps<TestOptions, TestEventMap, object> &
+  Record<string, unknown> => contentSpy.mock.calls.at(-1)![0];
 
 const hrefByName = () =>
   Object.fromEntries(lastArgs().state.routes.map((r) => [r.name, r.href] as const));
@@ -220,6 +220,24 @@ describe('unstable_integrateWithRouter / unstable_createStandardRouterNavigator'
         .state.routes.map((r) => r.name)
         .sort()
     ).toEqual(['index', 'second']);
+  });
+
+  it('distinguishes declared and inferred routes via descriptor routeSource', () => {
+    renderRouter({
+      _layout: () => (
+        <StandardTabsAll>
+          <StandardTabsAll.Screen name="index" />
+        </StandardTabsAll>
+      ),
+      index: () => <View testID="index" />,
+      second: () => <View testID="second" />,
+    });
+
+    const { state, descriptors } = lastArgs();
+    const routeSourceByName = Object.fromEntries(
+      state.routes.map((route) => [route.name, descriptors[route.key]!.routeSource])
+    );
+    expect(routeSourceByName).toEqual({ index: 'layout', second: 'filesystem' });
   });
 
   it('keeps Protected screens whose guard is false hidden', () => {

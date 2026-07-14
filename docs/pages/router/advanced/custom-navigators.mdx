@@ -80,12 +80,12 @@ export default function Layout() {
 
 ### What `NavigatorContent` receives
 
-| Property      | Description                                                                                                                            |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `state`       | The current navigation state: `{ index, routes }`, where each route has a `key`, `name`, `params`, and an `href`.                      |
-| `descriptors` | A map keyed by `route.key`. Each descriptor exposes the screen's resolved `options` and a `render()` function that renders the screen. |
-| `actions`     | Functions to change the navigation state: `navigate(name, params?)` and `back()`.                                                      |
-| `emitter`     | An object with an `emit()` method for sending events to screens.                                                                       |
+| Property      | Description                                                                                                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `state`       | The current navigation state: `{ index, routes }`, where each route has a `key`, `name`, `params`, and an `href`.                                                                                                                                                                     |
+| `descriptors` | A map keyed by `route.key`. Each descriptor exposes the screen's resolved `options`, a `render()` function that renders the screen, and a `routeSource`. The source is `layout` for a route declared with `<Navigator.Screen>`, `filesystem` for an inferred route, or `undefined` outside Expo Router. |
+| `actions`     | Functions to change the navigation state: `navigate(name, params?)` and `back()`.                                                                                                                                                                                                     |
+| `emitter`     | An object with an `emit()` method for sending events to screens.                                                                                                                                                                                                                      |
 
 ### Typed events
 
@@ -144,7 +144,7 @@ function TabsContent({ activeRouteKey, preload }: TabsContentProps) {
 
 ### The standard navigator API
 
-The `NavigatorContent` component shown above is a [standard navigator](https://github.com/react-navigation/standard-navigation). It implements a minimal, framework-agnostic contract defined by the [`standard-navigation`](https://www.npmjs.com/package/standard-navigation) package. The `state`, `descriptors`, `actions`, and `emitter` your content receives are exactly the [same API](#what-navigatorcontent-receives) as the in-app navigator above. The only difference is who creates the navigator.
+The `NavigatorContent` component shown above is a [standard navigator](https://github.com/react-navigation/standard-navigation). It implements a minimal, framework-agnostic contract defined by the [`standard-navigation`](https://www.npmjs.com/package/standard-navigation) package. Expo Router extends the standard descriptor with `routeSource`; use Expo Router's `NavigatorContentProps` or `StandardNavigatorDescriptor` types when reading it. The only other difference between the in-app and library integrations is who creates the navigator.
 
 `unstable_createStandardRouterNavigator` is a shortcut that calls `createStandardNavigator` (from `standard-navigation`) for you and integrates the result with Expo Router in one step. As a library author, call `createStandardNavigator` yourself and keep a reference to the navigator:
 
