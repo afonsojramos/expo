@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type ComponentProps } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { createStandardNavigator, type NavigatorArgs } from 'standard-navigation';
+import {
+  createStandardNavigator,
+  type NavigatorArgs,
+  type NavigatorDescriptor,
+} from 'standard-navigation';
 
 import type { CommonNavigationAction, ParamListBase } from '../../react-navigation/core';
 import {
@@ -11,7 +15,11 @@ import {
 } from '../../react-navigation/routers';
 import type { GoBackAction, NavigateAction } from '../../react-navigation/routers/CommonActions';
 import { unstable_createStandardRouterNavigator } from '../index';
-import type { NavigatorContentProps, StandardNavigationAction } from '../types';
+import type {
+  NavigatorContentProps,
+  StandardNavigationAction,
+  StandardNavigatorDescriptor,
+} from '../types';
 
 // Type-equality helpers
 type Expect<T extends true> = T;
@@ -20,6 +28,10 @@ type Equal<A, B> =
 
 type Opts = { title?: string };
 type EventMap = { tabPress: { data: undefined; canPreventDefault: true } };
+
+export type _DescriptorExtendsStandardDescriptor = Expect<
+  StandardNavigatorDescriptor<Opts> extends NavigatorDescriptor<Opts> ? true : false
+>;
 
 function Content(_args: NavigatorArgs<Opts, EventMap>) {
   return null;
