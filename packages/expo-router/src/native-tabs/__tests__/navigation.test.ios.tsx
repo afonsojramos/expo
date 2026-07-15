@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Tabs } from 'react-native-screens';
 
 import { router } from '../../imperative-api';
+import Stack from '../../layouts/Stack';
 import { Link } from '../../link/Link';
 import { renderRouter } from '../../testing-library';
 import { NativeTabs } from '../NativeTabs';
@@ -355,5 +356,71 @@ describe('Native Bottom Tabs trigger changes', () => {
 
     expect(screen.queryByTestId('index')).toBeNull();
     expect(TabsScreen).not.toHaveBeenCalled();
+  });
+
+  it('keeps the navigator mounted when every trigger is protected', () => {
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    renderRouter({
+      _layout: () => (
+        <NativeTabs>
+          <NativeTabs.Protected guard={false}>
+            <NativeTabs.Trigger name="index" />
+          </NativeTabs.Protected>
+        </NativeTabs>
+      ),
+      index: () => <View testID="index" />,
+    });
+
+    expect(tabRouteNames()).toEqual(['index']);
+    expect(screen.queryByTestId('index')).toBeNull();
+    expect(TabsScreen).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'All routes in this navigator are protected. Ensure at least one route is accessible.'
+    );
+  });
+
+  it('honors redirectTo when every trigger is protected', () => {
+    renderRouter(
+      {
+        _layout: () => <Stack />,
+        '(tabs)/_layout': () => (
+          <NativeTabs>
+            <NativeTabs.Protected guard={false} redirectTo="/login">
+              <NativeTabs.Trigger name="index" />
+            </NativeTabs.Protected>
+          </NativeTabs>
+        ),
+        '(tabs)/index': () => <View testID="index" />,
+        login: () => <View testID="login" />,
+      },
+      { initialUrl: '/' }
+    );
+
+    expect(screen.getByTestId('login')).toBeVisible();
+    expect(screen).toHavePathname('/login');
+  });
+
+  it('honors redirectTo instead of falling back to a visible tab', () => {
+    renderRouter(
+      {
+        _layout: () => <Stack />,
+        '(tabs)/_layout': () => (
+          <NativeTabs>
+            <NativeTabs.Trigger name="index" />
+            <NativeTabs.Protected guard={false} redirectTo="/login">
+              <NativeTabs.Trigger name="second" />
+            </NativeTabs.Protected>
+          </NativeTabs>
+        ),
+        '(tabs)/index': () => <View testID="index" />,
+        '(tabs)/second': () => <View testID="second" />,
+        login: () => <View testID="login" />,
+      },
+      { initialUrl: '/second' }
+    );
+
+    expect(screen.getByTestId('login')).toBeVisible();
+    expect(screen).toHavePathname('/login');
   });
 });

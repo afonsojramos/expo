@@ -660,10 +660,39 @@ describe('prefetch', () => {
       index: () => {
         return <Link prefetch href="/test" />;
       },
-      test: () => null,
+      test: () => <Text testID="guarded-content">guarded</Text>,
       _layout: () => (
         <Stack>
           <Stack.Protected guard={guard}>
+            <Stack.Screen name="test" />
+          </Stack.Protected>
+        </Stack>
+      ),
+    });
+
+    // The preloaded guarded route must not leak its content.
+    expect(screen.queryByTestId('guarded-content')).toBeNull();
+
+    // Guarded routes stay registered in the navigator, so the prefetch preloads
+    // the route like any other. Its content still renders nothing while guarded.
+    expect(screen.getRouterState().routes[0]!.state!.preloadedRoutes).toEqual([
+      {
+        key: expect.stringMatching(/^test-/),
+        name: 'test',
+        params: {},
+      },
+    ]);
+  });
+
+  it('does not throw an exception when prefetching a protected route with guard true', () => {
+    renderRouter({
+      index: () => {
+        return <Link prefetch href="/test" />;
+      },
+      test: () => null,
+      _layout: () => (
+        <Stack>
+          <Stack.Protected guard>
             <Stack.Screen name="test" />
           </Stack.Protected>
         </Stack>

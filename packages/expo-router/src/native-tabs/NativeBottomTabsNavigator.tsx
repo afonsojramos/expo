@@ -4,6 +4,7 @@ import React, { use, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useRouteNode } from '../Route';
 import { router } from '../imperative-api';
+import { useGuardRedirect } from '../layouts/GuardContext';
 import type {
   ParamListBase,
   TabNavigationState,
@@ -65,6 +66,8 @@ function NativeTabsContent({
   }
 
   const { routes } = state;
+  const focusedRoute = routes[state.index]!;
+  const { hasRedirect: focusedRouteHasGuardRedirect } = useGuardRedirect(focusedRoute.name);
 
   const visibleTabs = useMemo(
     () =>
@@ -112,10 +115,10 @@ function NativeTabsContent({
     return routes.find((route) => route.key === redirectTab?.routeKey)?.href;
   }, [redirectToRouteName, routes, visibleTabs]);
   useEffect(() => {
-    if (visibleFocusedTabIndex < 0 && redirectTabHref != null) {
+    if (!focusedRouteHasGuardRedirect && visibleFocusedTabIndex < 0 && redirectTabHref != null) {
       router.replace(redirectTabHref);
     }
-  }, [visibleFocusedTabIndex, redirectTabHref]);
+  }, [focusedRouteHasGuardRedirect, visibleFocusedTabIndex, redirectTabHref]);
 
   const provenanceRef = useRef(0);
 
@@ -172,6 +175,10 @@ function NativeTabsContent({
     'focusedIndex' | 'provenance' | 'tabs' | 'onTabChange'
   > &
     Record<Exclude<keyof typeof rest, keyof NativeTabsViewProps>, never> = rest;
+
+  if (focusedRouteHasGuardRedirect) {
+    return descriptors[focusedRoute.key]!.render();
+  }
 
   if (visibleTabs.length === 0) {
     return null;
