@@ -7,14 +7,31 @@ import { sortRoutesWithInitial } from '../Route';
 import { getContextKey, stripInvisibleSegmentsFromPath } from '../matchers';
 import type { Href } from '../types';
 
-export const GuardContext = createContext<Map<string, Href> | null>(null);
+// `Href` = guarded with a redirect, `null` = guarded with no available destination.
+export type GuardRedirect = Href | null;
+// Per route name; a missing entry means the route is unguarded.
+export type ResolvedGuards = Map<string, GuardRedirect>;
 
-export function useGuardRedirect(routeName: string): Href | undefined {
+export const GuardContext = createContext<ResolvedGuards | null>(null);
+
+export function useGuardRedirect(
+  routeName: string
+):
+  | { hasRedirect: true; redirectHref: GuardRedirect }
+  | { hasRedirect: false; redirectHref?: undefined } {
   const guards = use(GuardContext);
-  if (!guards) {
-    return undefined;
+  if (guards) {
+    // `has`-based lookups so a `null` value (guarded, no destination) is not
+    // mistaken for a missing entry (unguarded).
+    if (guards.has(routeName)) {
+      return { hasRedirect: true, redirectHref: guards.get(routeName) ?? null };
+    }
+    const stripped = routeName.replace(/\/index$/, '');
+    if (guards.has(stripped)) {
+      return { hasRedirect: true, redirectHref: guards.get(stripped) ?? null };
+    }
   }
-  return guards.get(routeName) ?? guards.get(routeName.replace(/\/index$/, ''));
+  return { hasRedirect: false };
 }
 
 function matchesRouteName(route: string, name: string) {
@@ -76,11 +93,11 @@ export function GuardContextProvider({
         )
       : '/';
 
-    return new Map<string, Href>(
+    return new Map<string, GuardRedirect>(
       Array.from(
         guardedRedirects,
-        ([name, redirectTo]) => [name, redirectTo ?? defaultHref] as const
-      ).filter((entry): entry is [string, Href] => entry[1] != null)
+        ([name, redirectTo]) => [name, redirectTo ?? defaultHref ?? null] as const
+      )
     );
   }, [signature, node?.children, node?.initialRouteName]);
 

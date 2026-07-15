@@ -577,6 +577,130 @@ it('works with tabs', () => {
   expect(screen.queryByLabelText('protected, tab, 2 of 2')).toBeVisible();
 });
 
+describe('all routes guarded', () => {
+  it('renders nothing without crashing when every route is guarded from the start', () => {
+    renderRouter({
+      _layout: function Layout() {
+        return (
+          <>
+            <Text testID="layout">layout</Text>
+            <Stack id={undefined}>
+              <Stack.Protected guard={false}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="second" />
+              </Stack.Protected>
+            </Stack>
+          </>
+        );
+      },
+      index: () => <Text testID="index">index</Text>,
+      second: () => <Text testID="second">second</Text>,
+    });
+
+    expect(screen.getByTestId('layout')).toBeVisible();
+    expect(screen.queryByTestId('index')).toBeNull();
+    expect(screen.queryByTestId('second')).toBeNull();
+    // The navigator itself stays mounted (previously it rendered null when all
+    // its routes were guarded).
+    expect(JSON.stringify(screen.toJSON())).toContain('RNSScreenStack');
+  });
+
+  it('keeps navigation state when all guards flip false and back to true', () => {
+    let setGuard: Dispatch<SetStateAction<boolean>>;
+
+    renderRouter({
+      _layout: function Layout() {
+        const [guard, setState] = useState(true);
+        setGuard = setState;
+        return (
+          <Stack id={undefined}>
+            <Stack.Protected guard={guard}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="second" />
+            </Stack.Protected>
+          </Stack>
+        );
+      },
+      index: () => <Text testID="index">index</Text>,
+      second: () => <Text testID="second">second</Text>,
+    });
+
+    act(() => router.push('/second'));
+    expect(screen.getByTestId('second')).toBeVisible();
+    expect(screen).toHavePathname('/second');
+
+    const stateBefore = store.state!.routes[0]!.state!;
+    const focusedKeyBefore = stateBefore.routes[stateBefore.index!]!.key;
+
+    // Guard everything: content hides but the navigator must stay mounted.
+    act(() => {
+      setGuard(false);
+    });
+
+    expect(screen.queryByTestId('index')).toBeNull();
+    expect(screen.queryByTestId('second')).toBeNull();
+
+    // Restore access: the same navigation state is still there, not reinitialized.
+    act(() => {
+      setGuard(true);
+    });
+
+    expect(screen.getByTestId('second')).toBeVisible();
+    expect(screen).toHavePathname('/second');
+    const stateAfter = store.state!.routes[0]!.state!;
+    expect(stateAfter.routes[stateAfter.index!]!.key).toBe(focusedKeyBefore);
+    // Non-focused guarded history entries are pruned while the guard is down,
+    // so only the focused route survives the flip.
+    expect(stateAfter.routes).toHaveLength(1);
+  });
+
+  it('does not render guarded content when pushing directly to a route guarded with no destination', () => {
+    renderRouter({
+      _layout: function Layout() {
+        return (
+          <Stack id={undefined}>
+            <Stack.Protected guard={false}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="second" />
+            </Stack.Protected>
+          </Stack>
+        );
+      },
+      index: () => <Text testID="index">index</Text>,
+      second: () => <Text testID="second">second</Text>,
+    });
+
+    act(() => router.push('/second'));
+
+    expect(screen.queryByTestId('index')).toBeNull();
+    expect(screen.queryByTestId('second')).toBeNull();
+  });
+
+  it('redirects out of a fully guarded nested navigator via redirectTo', () => {
+    renderRouter(
+      {
+        _layout: () => <Stack id={undefined} />,
+        index: () => <Text testID="index">index</Text>,
+        login: () => <Text testID="login">login</Text>,
+        'nested/_layout': function NestedLayout() {
+          return (
+            <Stack id={undefined}>
+              <Stack.Protected guard={false} redirectTo="/login">
+                <Stack.Screen name="secret" />
+              </Stack.Protected>
+            </Stack>
+          );
+        },
+        'nested/secret': () => <Text testID="secret">secret</Text>,
+      },
+      { initialUrl: '/nested/secret' }
+    );
+
+    expect(screen.getByTestId('login')).toBeVisible();
+    expect(screen).toHavePathname('/login');
+  });
+});
+
 describe('routes without /index suffix', () => {
   describe('Protected', () => {
     it('should protect dynamic routes without explicit /index suffix', () => {
