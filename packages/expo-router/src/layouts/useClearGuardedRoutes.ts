@@ -8,10 +8,9 @@ import {
   type ParamListBase,
   type StackNavigationState,
 } from '../react-navigation/routers';
-import type { Href } from '../types';
-import { GuardContext } from './GuardContext';
+import { GuardContext, type ResolvedGuards } from './GuardContext';
 
-function isGuardedRouteName(guards: Map<string, Href>, name: string): boolean {
+function isGuardedRouteName(guards: ResolvedGuards, name: string): boolean {
   return guards.has(name) || guards.has(name.replace(/\/index$/, ''));
 }
 
