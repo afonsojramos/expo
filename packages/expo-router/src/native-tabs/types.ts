@@ -316,6 +316,11 @@ export interface NativeTabsProps extends PropsWithChildren {
    */
   tintColor?: ColorValue;
   /**
+   * The route shown initially and used as the redirect target when the focused route has no visible
+   * tab trigger.
+   */
+  initialRouteName?: string;
+  /**
    * The background color of the tab bar.
    */
   backgroundColor?: ColorValue;
@@ -480,6 +485,7 @@ export interface NativeTabsProps extends PropsWithChildren {
 
 export interface InternalNativeTabsProps extends NativeTabsProps {
   nonTriggerChildren?: React.ReactNode;
+  redirectToRouteName?: string;
 }
 export interface OnTabChangeEventPayload {
   /**
@@ -517,6 +523,7 @@ export interface NativeTabsViewProps extends Omit<
   | 'badgeTextColor'
   | 'rippleColor'
   | 'disableIndicator'
+  | 'redirectToRouteName'
   | 'labelVisibilityMode'
 > {
   focusedIndex: number;

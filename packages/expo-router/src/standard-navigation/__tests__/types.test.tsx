@@ -166,7 +166,6 @@ export const _options: OptionsFn = ({ route, theme }) => {
 
   // eslint-disable-next-line no-unused-expressions
   unstable_createStandardRouterNavigator(TabsContent, TabRouter, {
-    useOnlyUserDefinedScreens: true,
     createProps: ({ state, dispatch }) => ({
       activeRouteKey: state.routes[state.index]!.key,
       preload: (name: string) => dispatch({ type: 'PRELOAD', payload: { name } }),

@@ -175,7 +175,7 @@ export function unstable_integrateWithRouter<
     typeof StandardRouterNavigator,
     State,
     EventMap & EventMapBase
-  >(StandardRouterNavigator, undefined, options?.useOnlyUserDefinedScreens);
+  >(StandardRouterNavigator);
 }
 
 /**
