@@ -33,6 +33,7 @@ function NativeStackNavigator({
   screenListeners,
   screenOptions,
   screenLayout,
+  UNSTABLE_routeNamesAreStatic,
   UNSTABLE_router,
   ...rest
 }: NativeStackNavigatorProps) {
@@ -50,6 +51,7 @@ function NativeStackNavigator({
     screenListeners,
     screenOptions,
     screenLayout,
+    UNSTABLE_routeNamesAreStatic,
     UNSTABLE_router,
   });
 

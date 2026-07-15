@@ -29,6 +29,7 @@ function DrawerNavigator({
   screenListeners,
   screenOptions,
   screenLayout,
+  UNSTABLE_routeNamesAreStatic,
   UNSTABLE_router,
   ...rest
 }: DrawerNavigatorProps) {
@@ -48,6 +49,7 @@ function DrawerNavigator({
     screenListeners,
     screenOptions,
     screenLayout,
+    UNSTABLE_routeNamesAreStatic,
     UNSTABLE_router,
   });
 

@@ -12,6 +12,7 @@ import { Tabs as JSTabs } from '../layouts/Tabs';
 import { Link, Redirect } from '../link/Link';
 import { type RenderRouterOptions, renderRouter, waitFor } from '../testing-library';
 import { TabList, TabSlot, TabTrigger, Tabs } from '../ui';
+import { useIsFocused } from '../useIsFocused';
 import type { PressableProps } from '../views/Pressable';
 import { Pressable } from '../views/Pressable';
 
@@ -239,6 +240,203 @@ it('can dynamically add tabs', () => {
   // This now works because there is an orange tab
   act(() => router.push('/orange'));
   expect(screen).toHaveSegments(['orange']);
+});
+
+it('can dynamically remove the active tab', () => {
+  renderRouter(
+    {
+      _layout: function TabLayout() {
+        const [showAll, setShowAll] = useState(true);
+
+        return (
+          <Tabs>
+            <TabList>
+              <TabTrigger name="apple" href="/apple" />
+              {showAll && <TabTrigger name="orange" href="/orange" />}
+            </TabList>
+            <TabSlot />
+            <Button testID="hide-orange" title="Hide orange" onPress={() => setShowAll(false)} />
+          </Tabs>
+        );
+      },
+      apple: () => null,
+      orange: () => null,
+    },
+    {
+      initialUrl: '/orange',
+    }
+  );
+
+  expect(screen).toHaveSegments(['orange']);
+
+  fireEvent.press(screen.getByTestId('hide-orange'));
+
+  expect(screen).toHaveSegments(['apple']);
+});
+
+it('preserves surviving tab content when the trigger set changes', () => {
+  let appleMounts = 0;
+
+  function Apple() {
+    useState(() => appleMounts++);
+    return null;
+  }
+
+  renderRouter(
+    {
+      _layout: function TabLayout() {
+        const [showOrange, setShowOrange] = useState(true);
+        return (
+          <Tabs>
+            <TabList>
+              <TabTrigger name="apple" href="/apple" />
+              {showOrange && <TabTrigger name="orange" href="/orange" />}
+            </TabList>
+            <TabSlot />
+            <Button testID="hide-orange" title="Hide orange" onPress={() => setShowOrange(false)} />
+          </Tabs>
+        );
+      },
+      apple: Apple,
+      orange: () => null,
+    },
+    { initialUrl: '/apple' }
+  );
+
+  expect(appleMounts).toBe(1);
+  fireEvent.press(screen.getByTestId('hide-orange'));
+  expect(appleMounts).toBe(1);
+});
+
+it('does not reset tab content when only a trigger href changes', () => {
+  let appleMounts = 0;
+
+  function Apple() {
+    useState(() => appleMounts++);
+    return null;
+  }
+
+  renderRouter(
+    {
+      _layout: function TabLayout() {
+        const [withQuery, setWithQuery] = useState(false);
+        return (
+          <Tabs>
+            <TabList>
+              <TabTrigger name="apple" href={withQuery ? '/apple?updated=true' : '/apple'} />
+            </TabList>
+            <TabSlot />
+            <Button testID="change-href" title="Change href" onPress={() => setWithQuery(true)} />
+          </Tabs>
+        );
+      },
+      apple: Apple,
+    },
+    { initialUrl: '/apple' }
+  );
+
+  expect(appleMounts).toBe(1);
+  fireEvent.press(screen.getByTestId('change-href'));
+  expect(appleMounts).toBe(1);
+});
+
+it('does not reset tab content when triggers are reordered', () => {
+  let appleMounts = 0;
+
+  function Apple() {
+    useState(() => appleMounts++);
+    return null;
+  }
+
+  renderRouter(
+    {
+      _layout: function TabLayout() {
+        const [reversed, setReversed] = useState(false);
+        const triggers = [
+          <TabTrigger key="apple" name="apple" href="/apple" />,
+          <TabTrigger key="orange" name="orange" href="/orange" />,
+        ];
+        return (
+          <Tabs>
+            <TabList>{reversed ? triggers.reverse() : triggers}</TabList>
+            <TabSlot />
+            <Button testID="reorder" title="Reorder" onPress={() => setReversed(true)} />
+          </Tabs>
+        );
+      },
+      apple: Apple,
+      orange: () => null,
+    },
+    { initialUrl: '/apple' }
+  );
+
+  expect(appleMounts).toBe(1);
+  fireEvent.press(screen.getByTestId('reorder'));
+  expect(appleMounts).toBe(1);
+});
+
+it('keeps focus hooks correct after removing the active trigger', () => {
+  function Apple() {
+    return <Text testID="apple-focus">{useIsFocused() ? 'focused' : 'not focused'}</Text>;
+  }
+
+  renderRouter(
+    {
+      _layout: function TabLayout() {
+        const [showOrange, setShowOrange] = useState(true);
+        return (
+          <Tabs>
+            <TabList>
+              <TabTrigger name="apple" href="/apple" />
+              {showOrange && <TabTrigger name="orange" href="/orange" />}
+            </TabList>
+            <TabSlot />
+            <Button testID="hide-orange" title="Hide orange" onPress={() => setShowOrange(false)} />
+          </Tabs>
+        );
+      },
+      apple: Apple,
+      orange: () => null,
+    },
+    { initialUrl: '/orange' }
+  );
+
+  fireEvent.press(screen.getByTestId('hide-orange'));
+  expect(screen.getByTestId('apple-focus')).toHaveTextContent('focused');
+});
+
+it('removes the active trigger from a nested dynamic tab navigator', () => {
+  renderRouter(
+    {
+      _layout: () => (
+        <Tabs>
+          <TabList>
+            <TabTrigger name="fruit" href="/fruit" />
+          </TabList>
+          <TabSlot />
+        </Tabs>
+      ),
+      'fruit/_layout': function FruitTabs() {
+        const [showOrange, setShowOrange] = useState(true);
+        return (
+          <Tabs>
+            <TabList>
+              <TabTrigger name="apple" href="/fruit/apple" />
+              {showOrange && <TabTrigger name="orange" href="/fruit/orange" />}
+            </TabList>
+            <TabSlot />
+            <Button testID="hide-orange" title="Hide orange" onPress={() => setShowOrange(false)} />
+          </Tabs>
+        );
+      },
+      'fruit/apple': () => null,
+      'fruit/orange': () => null,
+    },
+    { initialUrl: '/fruit/orange' }
+  );
+
+  fireEvent.press(screen.getByTestId('hide-orange'));
+  expect(screen).toHaveSegments(['fruit', 'apple']);
 });
 
 it('does works with shared groups', () => {

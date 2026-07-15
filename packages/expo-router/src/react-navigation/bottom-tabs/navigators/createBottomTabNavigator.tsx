@@ -28,6 +28,7 @@ function BottomTabNavigator({
   screenListeners,
   screenOptions,
   screenLayout,
+  UNSTABLE_routeNamesAreStatic,
   UNSTABLE_router,
   ...rest
 }: BottomTabNavigatorProps) {
@@ -46,6 +47,7 @@ function BottomTabNavigator({
     screenListeners,
     screenOptions,
     screenLayout,
+    UNSTABLE_routeNamesAreStatic,
     UNSTABLE_router,
   });
 

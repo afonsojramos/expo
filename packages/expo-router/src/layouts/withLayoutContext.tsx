@@ -165,7 +165,13 @@ export function withLayoutContext<
       return (
         <IsWithinLayoutContext value>
           <GuardContextProvider node={node} guardedRedirects={guardedRedirects}>
-            <Nav {...props} id={contextKey} ref={ref} children={sorted} />
+            <Nav
+              {...props}
+              id={contextKey}
+              ref={ref}
+              children={sorted}
+              UNSTABLE_routeNamesAreStatic
+            />
           </GuardContextProvider>
         </IsWithinLayoutContext>
       );
