@@ -37,6 +37,7 @@
 
 ### 💡 Others
 
+- Remove `useOnlyUserDefinedScreens` and keep every filesystem route registered in layout navigators. ([#47983](https://github.com/expo/expo/pull/47983) by [@Ubax](https://github.com/Ubax))
 - Move `@testing-library/jest-dom` and `@testing-library/user-event` from `dependencies` to `devDependencies` ([#47820](https://github.com/expo/expo/pull/47820) by [@krystofwoldrich](https://github.com/krystofwoldrich))
 - Rewrite native tabs using standard-navigation ([#46457](https://github.com/expo/expo/pull/46457) by [@Ubax](https://github.com/Ubax))
 - [Internal] Split `useLoaderData()` into a document cache and a per-mount Suspense store ([#47365](https://github.com/expo/expo/pull/47365) by [@hassankhan](https://github.com/hassankhan))

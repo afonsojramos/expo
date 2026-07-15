@@ -53,12 +53,6 @@ export interface IntegrateWithRouterOptions<
   NavigatorProps extends object = object,
 > {
   /**
-   * When `true`, only screens explicitly declared as `<Navigator.Screen>` children are rendered;
-   * routes discovered from the filesystem that were not declared are ignored.
-   */
-  useOnlyUserDefinedScreens?: boolean;
-
-  /**
    * Allows router-specific information to be exposed via navigator props alongside the standard
    * `state` and `actions`.
    *
