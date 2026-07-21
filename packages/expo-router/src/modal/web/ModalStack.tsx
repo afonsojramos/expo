@@ -37,7 +37,7 @@ function ModalStackNavigator({
   children,
   screenOptions,
 }: ModalStackNavigatorProps) {
-  const { state, navigation, descriptors, NavigationContent, describe } = useNavigationBuilder<
+  const { state, navigation, descriptors, NavigationContent } = useNavigationBuilder<
     StackNavigationState<ParamListBase>,
     StackRouterOptions,
     StackActionHelpers<ParamListBase>,
@@ -73,17 +73,12 @@ function ModalStackNavigator({
 
   return (
     <NavigationContent>
-      <ModalStackView
-        state={state}
-        navigation={navigation}
-        descriptors={descriptors}
-        describe={describe}
-      />
+      <ModalStackView state={state} navigation={navigation} descriptors={descriptors} />
     </NavigationContent>
   );
 }
 
-const ModalStackView = ({ state, navigation, descriptors, describe }: ModalStackViewProps) => {
+const ModalStackView = ({ state, navigation, descriptors }: ModalStackViewProps) => {
   const isWeb = process.env.EXPO_OS === 'web';
   const { colors } = useTheme();
   const { preventedRoutes } = usePreventRemoveContext();
@@ -109,18 +104,19 @@ const ModalStackView = ({ state, navigation, descriptors, describe }: ModalStack
   const overlayRoutes = React.useMemo(() => {
     if (!isWeb) return [];
     const idx = findLastNonModalIndex(state, descriptors);
-    return state.routes.slice(idx + 1);
+    return state.routes.slice(idx + 1, state.index + 1);
   }, [isWeb, state, descriptors]);
 
   return (
     <div style={{ flex: 1, display: 'flex' }}>
-      <NativeStackView
-        state={newStackState}
-        descriptors={descriptors}
-        describe={describe}
-        emit={navigation.emit}
-        pop={pop}
-      />
+      {newStackState.routes.length > 0 && (
+        <NativeStackView
+          state={newStackState}
+          descriptors={descriptors}
+          emit={navigation.emit}
+          pop={pop}
+        />
+      )}
       {isWeb &&
         overlayRoutes.map((route) => {
           const isTransparentModal = isTransparentModalPresentation(
